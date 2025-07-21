@@ -1,39 +1,32 @@
 from telegram import Update, InputFile
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 import os
-
+import threading
 from flask import Flask
-from threading import Thread
 
-# ✅ Web server for Render + UptimeRobot
-app_web = Flask('')
+# ✅ Web server for uptime (Render ping)
+app = Flask(__name__)
 
-@app_web.route('/')
+@app.route('/')
 def home():
     return "Bot is alive!"
 
 def run():
-    app_web.run(host='0.0.0.0', port=8080)
+    app.run(host='0.0.0.0', port=8080)
 
-def keep_alive():
-    t = Thread(target=run)
-    t.start()
+def start_server():
+    thread = threading.Thread(target=run)
+    thread.start()
 
-keep_alive()  # Start web server
+start_server()
 
-# ✅ New Bot Token (yahi wala jo tumne diya tha)
+# ✅ Bot Token & Constants
 BOT_TOKEN = "7588601306:AAHovG-BWMOm3rs9k94rMDmPrTpREIBY-R8"
-
-# ✅ Admin Telegram ID
 ADMIN_ID = 7881285373
-
-# ✅ Group Link (send after approval)
 GROUP_LINK = "https://t.me/+HGrIvWqrAkw1OGU1"
-
-# ✅ UPI ID
 UPI_ID = "squad.support@ibl"
 
-# ✅ Start command
+# ✅ /start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     await update.message.reply_text(
@@ -52,13 +45,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("⚠️ QR कोड नहीं मिला।")
 
-# ✅ Handle screenshot/photo
+# ✅ Screenshot handler
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user
     await update.message.forward(chat_id=ADMIN_ID)
     await update.message.reply_text("✅ Screenshot भेज दिया गया है। हमारी टीम बहुत जल्द आपसे संपर्क करेगी।")
 
-# ✅ Admin approval command
+# ✅ Admin approval
 async def approve(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id == ADMIN_ID:
         if context.args:
@@ -68,13 +60,12 @@ async def approve(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await update.message.reply_text("❌ User ID नहीं मिला.\nउदाहरण: /approve 123456789")
 
-# ✅ Main
+# ✅ Bot Setup
 if __name__ == "__main__":
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
-
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("approve", approve))
-    app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
+    app_bot = ApplicationBuilder().token(BOT_TOKEN).build()
+    app_bot.add_handler(CommandHandler("start", start))
+    app_bot.add_handler(CommandHandler("approve", approve))
+    app_bot.add_handler(MessageHandler(filters.PHOTO, handle_photo))
 
     print("🤖 Bot is running...")
-    app.run_polling()
+    app_bot.run_polling()
