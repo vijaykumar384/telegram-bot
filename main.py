@@ -2,6 +2,25 @@ from telegram import Update, InputFile
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 import os
 
+from flask import Flask
+from threading import Thread
+
+# ✅ Web server for Render + UptimeRobot
+app_web = Flask('')
+
+@app_web.route('/')
+def home():
+    return "Bot is alive!"
+
+def run():
+    app_web.run(host='0.0.0.0', port=8080)
+
+def keep_alive():
+    t = Thread(target=run)
+    t.start()
+
+keep_alive()  # Start web server
+
 # ✅ New Bot Token (yahi wala jo tumne diya tha)
 BOT_TOKEN = "7588601306:AAHovG-BWMOm3rs9k94rMDmPrTpREIBY-R8"
 
@@ -49,7 +68,7 @@ async def approve(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await update.message.reply_text("❌ User ID नहीं मिला.\nउदाहरण: /approve 123456789")
 
-# ✅ Main function
+# ✅ Main
 if __name__ == "__main__":
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
